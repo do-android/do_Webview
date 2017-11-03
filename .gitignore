@@ -1,0 +1,8 @@
+*.class
+*.apk
+bin/
+gen/
+.settings/
+proguard/
+*.classpath
+/doExt_do_WebView/do_WebView.zip
