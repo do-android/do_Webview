@@ -28,7 +28,6 @@ import android.webkit.WebSettings.RenderPriority;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.LinearLayout;
-import android.widget.LinearLayout.LayoutParams;
 import core.DoServiceContainer;
 import core.helper.DoIOHelper;
 import core.helper.DoJsonHelper;
@@ -555,7 +554,7 @@ public class do_WebView_View extends DoPullToRefreshView implements DoIUIModuleV
 	 * @_callbackFuncName 回调函数名
 	 */
 	@Override
-	public void loadString(JSONObject _dictParas, DoIScriptEngine _scriptEngine, String _callbackFuncName) {
+	public void loadString(JSONObject _dictParas, final DoIScriptEngine _scriptEngine, final String _callbackFuncName) {
 		// 加载html字符串
 		try {
 			final String htmlStr = DoJsonHelper.getString(_dictParas, "text", "");
@@ -564,6 +563,8 @@ public class do_WebView_View extends DoPullToRefreshView implements DoIUIModuleV
 				@Override
 				public void run() {
 					webView.loadData(htmlStr, "text/html; charset=UTF-8", null);// 这种写法可以正确解码
+					DoInvokeResult _invokeResult = new DoInvokeResult(model.getUniqueKey());
+					_scriptEngine.callback(_callbackFuncName, _invokeResult);
 				}
 			});
 		} catch (Exception e) {
