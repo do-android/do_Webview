@@ -16,11 +16,13 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.net.http.SslError;
+import android.os.Build;
 import android.provider.Browser;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
 import android.webkit.DownloadListener;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebSettings;
@@ -662,7 +664,16 @@ public class do_WebView_View extends DoPullToRefreshView implements DoIUIModuleV
 			throw new Exception("value不能为空!");
 		}
 
-		CookieManager.getInstance().setCookie(_url, _value);
+		CookieManager.getInstance().setAcceptCookie(true);
+
+		String[] cookies = _value.split(";");
+		for (int index = 0; index < cookies.length; index++) {
+			CookieManager.getInstance().setCookie(_url, cookies[index]);
+		}
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+			CookieSyncManager cookieSyncManager = CookieSyncManager.createInstance(DoServiceContainer.getPageViewFactory().getAppContext());
+			cookieSyncManager.sync();
+		}
 	}
 
 	/**
