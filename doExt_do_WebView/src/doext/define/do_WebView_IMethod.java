@@ -21,4 +21,5 @@ public interface do_WebView_IMethod {
 	void setLoadingProgressColor(JSONObject _dictParas, DoIScriptEngine _scriptEngine, DoInvokeResult _invokeResult) throws Exception;
 	void getContentSize(JSONObject _dictParas, DoIScriptEngine _scriptEngine, DoInvokeResult _invokeResult) throws Exception;
 	void eval(JSONObject _dictParas, DoIScriptEngine _scriptEngine, String _callbackFuncName);
+	void setRequestHeader(JSONObject _dictParas, DoIScriptEngine _scriptEngine, DoInvokeResult _invokeResult) throws Exception;
 }

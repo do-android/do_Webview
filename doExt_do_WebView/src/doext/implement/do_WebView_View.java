@@ -2,6 +2,8 @@ package doext.implement;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.json.JSONObject;
@@ -134,7 +136,7 @@ public class do_WebView_View extends DoPullToRefreshView implements DoIUIModuleV
 					try {
 
 						new URL(url); // 检查url是否合法
-						view.loadUrl(url);
+						view.loadUrl(url, extraHeaders);
 					} catch (MalformedURLException e) {
 						// 打开类似于myapp://等开头的路径
 						Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
@@ -283,7 +285,7 @@ public class do_WebView_View extends DoPullToRefreshView implements DoIUIModuleV
 			return;
 		}
 		if (_fullUrl.startsWith("http:") || _fullUrl.startsWith("https:") || _fullUrl.startsWith("file:")) {
-			webView.loadUrl(_fullUrl);
+			webView.loadUrl(_fullUrl, extraHeaders);
 		} else {
 			try {
 				_fullUrl = DoIOHelper.getLocalFileFullPath(this.model.getCurrentPage().getCurrentApp(), _fullUrl);
@@ -355,7 +357,7 @@ public class do_WebView_View extends DoPullToRefreshView implements DoIUIModuleV
 			webView.getSettings().setBuiltInZoomControls(bool);
 		}
 		if (_changedValues.containsKey("enabled")) {
-			if (_changedValues.get("enabled") == "true")
+			if ("true".equals(_changedValues.get("enabled")))
 				this.setDescendantFocusability(FOCUS_BEFORE_DESCENDANTS);
 			else
 				this.setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);
@@ -424,6 +426,10 @@ public class do_WebView_View extends DoPullToRefreshView implements DoIUIModuleV
 			getContentSize(_dictParas, _scriptEngine, _invokeResult);
 			return true;
 		}
+		if ("setRequestHeader".equals(_methodName)) {
+			setRequestHeader(_dictParas, _scriptEngine, _invokeResult);
+			return true;
+		}
 		return false;
 	}
 
@@ -472,6 +478,7 @@ public class do_WebView_View extends DoPullToRefreshView implements DoIUIModuleV
 			webView.destroy();
 			webView = null;
 		}
+		extraHeaders.clear();
 	}
 
 	/**
@@ -650,6 +657,7 @@ public class do_WebView_View extends DoPullToRefreshView implements DoIUIModuleV
 	 * @_scriptEngine 当前Page JS上下文环境对象
 	 * @_invokeResult 用于返回方法结果对象
 	 */
+	@SuppressLint("NewApi")
 	@Override
 	public void setCookie(JSONObject _dictParas, DoIScriptEngine _scriptEngine, DoInvokeResult _invokeResult) throws Exception {
 
@@ -665,6 +673,7 @@ public class do_WebView_View extends DoPullToRefreshView implements DoIUIModuleV
 		}
 
 		CookieManager.getInstance().setAcceptCookie(true);
+		CookieManager.getInstance().removeAllCookie();
 
 		String[] cookies = _value.split(";");
 		for (int index = 0; index < cookies.length; index++) {
@@ -673,6 +682,8 @@ public class do_WebView_View extends DoPullToRefreshView implements DoIUIModuleV
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
 			CookieSyncManager cookieSyncManager = CookieSyncManager.createInstance(DoServiceContainer.getPageViewFactory().getAppContext());
 			cookieSyncManager.sync();
+		} else {
+			CookieManager.getInstance().flush();
 		}
 	}
 
@@ -703,6 +714,18 @@ public class do_WebView_View extends DoPullToRefreshView implements DoIUIModuleV
 			this.model.getEventCenter().fireEvent(eventName, _invokeResult);
 		} catch (Exception _err) {
 			DoServiceContainer.getLogEngine().writeError("DoWebView " + eventName + " \n", _err);
+		}
+	}
+
+	private Map<String, String> extraHeaders = new HashMap<String, String>();
+
+	@Override
+	public void setRequestHeader(JSONObject _dictParas, DoIScriptEngine _scriptEngine, DoInvokeResult _invokeResult) throws Exception {
+		JSONObject jsonObject = _dictParas.getJSONObject("requestHeader");
+		for (Iterator<String> keys = jsonObject.keys(); keys.hasNext();) {
+			String key = keys.next();
+			String value = jsonObject.getString(key);
+			extraHeaders.put(key, value);
 		}
 	}
 }
