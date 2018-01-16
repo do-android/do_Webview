@@ -68,7 +68,7 @@ public class do_WebView_View extends DoPullToRefreshView implements DoIUIModuleV
 	private Context ctx;
 
 	private boolean isNotFrist;
-
+	private Map<String, String> requestHeader = new HashMap<String, String>();
 	public final static String NO_CACHE = "no_cache";
 	public final static String NORMAL = "normal";
 
@@ -136,6 +136,8 @@ public class do_WebView_View extends DoPullToRefreshView implements DoIUIModuleV
 					try {
 
 						new URL(url); // 检查url是否合法
+						Map<String, String> extraHeaders = getRequestHeader();
+						// 请求头信息加载过之后会自动清除 所以要重新赋值
 						view.loadUrl(url, extraHeaders);
 					} catch (MalformedURLException e) {
 						// 打开类似于myapp://等开头的路径
@@ -285,9 +287,11 @@ public class do_WebView_View extends DoPullToRefreshView implements DoIUIModuleV
 			return;
 		}
 		if (_fullUrl.startsWith("http:") || _fullUrl.startsWith("https:") || _fullUrl.startsWith("file:")) {
+			Map<String, String> extraHeaders = getRequestHeader();
 			webView.loadUrl(_fullUrl, extraHeaders);
 		} else {
 			try {
+
 				_fullUrl = DoIOHelper.getLocalFileFullPath(this.model.getCurrentPage().getCurrentApp(), _fullUrl);
 				if (DoIOHelper.isAssets(_fullUrl)) {
 					_fullUrl = "/android_asset/" + DoIOHelper.getAssetsRelPath(_fullUrl);
@@ -478,7 +482,7 @@ public class do_WebView_View extends DoPullToRefreshView implements DoIUIModuleV
 			webView.destroy();
 			webView = null;
 		}
-		extraHeaders.clear();
+		requestHeader.clear();
 	}
 
 	/**
@@ -717,15 +721,21 @@ public class do_WebView_View extends DoPullToRefreshView implements DoIUIModuleV
 		}
 	}
 
-	private Map<String, String> extraHeaders = new HashMap<String, String>();
-
 	@Override
 	public void setRequestHeader(JSONObject _dictParas, DoIScriptEngine _scriptEngine, DoInvokeResult _invokeResult) throws Exception {
 		JSONObject jsonObject = _dictParas.getJSONObject("requestHeader");
 		for (Iterator<String> keys = jsonObject.keys(); keys.hasNext();) {
 			String key = keys.next();
 			String value = jsonObject.getString(key);
-			extraHeaders.put(key, value);
+			requestHeader.put(key, value);
 		}
+	}
+
+	private Map<String, String> getRequestHeader() {
+		Map<String, String> extraHeader = new HashMap<String, String>();
+		for (Map.Entry<String, String> entry : requestHeader.entrySet()) {
+			extraHeader.put(entry.getKey(), entry.getValue());
+		}
+		return extraHeader;
 	}
 }
